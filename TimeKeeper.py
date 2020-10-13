@@ -72,13 +72,24 @@ class Application(tk.Frame):
         self.minsWorked = tempdif / 60 / 60 * 100
         self.minsWorked = round(self.minsWorked)
         self.header["text"] = "YOU HAVE WORKED\n" + str(self.hoursWorked) + ':' + str(self.minsWorked)
-        path = r'C:\Users\Keith Rich\Documents\PythonScripts\TimeInTimeOut.xlsx'
+        self.appendToXlsx(self.timeIN, self.timeOut, self.hoursWorked, self.minsWorked)
+
+    def appendToXlsx(idk, In, Out, Hours, Mins, startrow=None, sheet_name='Sheet1', **to_excel_kwargs):
+        path = r'C:\Users\Keith Rich\Documents\PythonScripts\TimeCard\TimeInTimeOut.xlsx'
         book = load_workbook(path)
         writer = pandas.ExcelWriter(path, engine = 'openpyxl')
         writer.book = book
-        writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
-        info = pandas.DataFrame([datetime.date(datetime.now()), self.timeIN, self.timeOut, str(self.hoursWorked) + ':' + str(self.minsWorked)])
-        info.to_excel(writer, "Sheet1")
+        if startrow is None and sheet_name in writer.book.sheetnames:
+            startrow = writer.book[sheet_name].max_row
+        writer.sheets = {ws.title:ws for ws in writer.book.worksheets}
+
+        if startrow is None:
+            startrow = 0
+
+        df = {"IN": [In], "OUT": [Out], "HOURS:MINS": [str(Hours) + ":" + str(Mins)]}
+        info = pandas.DataFrame(data=df, columns=['IN', 'OUT', 'HOURS:MINS'], index=[str(datetime.date(datetime.now()))])
+
+        info.to_excel(writer, 'Sheet1', startrow=startrow, **to_excel_kwargs)
         writer.save()
         writer.close()
 
