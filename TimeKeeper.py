@@ -3,6 +3,7 @@ from datetime import datetime, date
 import re
 import pandas
 from openpyxl import load_workbook
+from tkinter import PhotoImage
 
 
 class Application(tk.Frame):
@@ -24,11 +25,15 @@ class Application(tk.Frame):
                                width=200)
         self.header.pack()
 
+        self.ClockInImage = tk.PhotoImage(file=r"C:\Users\Keith Rich\Documents\PythonScripts\TimeCard\Clock.png")
+        self.ClockInImage = self.ClockInImage.subsample(3,3)
+
         self.timeIn = tk.Button(self,
                                 text="TIME IN",
+                                image = self.ClockInImage,
+                                compound=tk.TOP,
                                 command=self.punchIN)
-
-        self.timeIn.pack(side='left')
+        self.timeIn.pack()
 
         self.timeOut = tk.Button(self,
                                  text="TIME OUT",
