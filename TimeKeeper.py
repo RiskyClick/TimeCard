@@ -32,7 +32,7 @@ class Application(tk.Frame):
                                       font=myFont,
                                       justify='center')
 
-        self.forgotClockIn.insert('end', "THis")
+        self.forgotClockIn.insert('end', "Enter Time\n00:00")
 
         self.forgotClockIn.grid(row=1, column=0)
         self.forgotClockIn.grid_forget()
@@ -91,8 +91,9 @@ class Application(tk.Frame):
         self.timeIN = t.strftime("%H:%M:%S")
 
     def punchOUT(self):
-        self.root.bind('<Return>', self.fix())
         if self.timeIN == 0:
+            root.bind('<Button-1>', self.removePreText)
+            root.bind('<Return>', self.fix)
             self.header['text'] = "You Forgot\nTo Clock In"
             self.forgotClockIn.grid(row=1, column=0)
         else:
@@ -100,9 +101,21 @@ class Application(tk.Frame):
             self.timeOut = t.strftime("%H:%M:%S")
             self.cal(self.timeIN, self.timeOut)
 
-    def fix(self):
-        print("WE ARE HERE")
-        print(self.forgotClockIn.get())
+    def removePreText(self, idk):
+        self.forgotClockIn.delete(0, 'end')
+
+    def fix(self, idk):
+        adjust = self.forgotClockIn.get()
+        if len(adjust) == 4:
+            adjust = '0' + adjust
+        if len(adjust) == 5:
+            for c in adjust:
+                if not c.isdigit() or c != ':':
+                    self.header['text'] = "Not A Valid Time\nEnter Time Using\nThis Format\n00:00"
+                    self.removePreText
+        else:
+            self.header['text'] = "Not A Valid Time\nEnter Time Using\nThis Format\n00:00"
+            self.removePreText
 
     def cal(self, timein, timeout):
         tempout = int(re.sub('[^0-9]', '', timeout))
