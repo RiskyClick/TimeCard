@@ -2,6 +2,7 @@ import tkinter as tk
 from datetime import datetime, date
 import re
 import pandas
+import tkinter.font as font
 from openpyxl import load_workbook
 from tkinter import PhotoImage
 
@@ -15,31 +16,70 @@ class Application(tk.Frame):
         self.minsWorked = 0
         self.date = 0
         self.master = master
+        self.master.configure(background='black')
         self.pack()
         self.create_widgets()
 
     def create_widgets(self):
-        self.header = tk.Label(self,
-                               text="CLOCK IN : CLOCK OUT",
-                               height=25,
-                               width=200)
-        self.header.pack()
+        myFont = font.Font(family='Courier',
+                           size=20,
+                           weight='bold')
 
-        self.ClockInImage = tk.PhotoImage(file=r"C:\Users\Keith Rich\Documents\PythonScripts\TimeCard\Clock.png")
-        self.ClockInImage = self.ClockInImage.subsample(3,3)
+        self.forgotClockIn = tk.Entry(self,
+                                      width=16,
+                                      bg="#2e3047",
+                                      fg="white",
+                                      font=myFont,
+                                      justify='center')
+
+        self.forgotClockIn.insert('end', "THis")
+
+        self.forgotClockIn.grid(row=1, column=0)
+        self.forgotClockIn.grid_forget()
+
+        self.header = tk.Label(self,
+                               font=myFont,
+                               text="CLOCK IN\n\nCLOCK OUT",
+                               fg='black',
+                               bg="#2e3047",
+                               height=5,
+                               width=16,
+                               borderwidth=5,
+                               relief="ridge")
+
+        self.header.grid(row=0, column=0)
+
+        self.ClockInImage = tk.PhotoImage(file=r".\Clock.png")
+        self.ClockInImage = self.ClockInImage.subsample(2, 2)
 
         self.timeIn = tk.Button(self,
                                 text="TIME IN",
-                                image = self.ClockInImage,
+                                font=myFont,
+                                image=self.ClockInImage,
                                 compound=tk.TOP,
-                                command=self.punchIN)
-        self.timeIn.pack()
+                                command=self.punchIN,
+                                fg='black',
+                                bg="#2e3047",
+                                activebackground="#686664",
+                                borderwidth=5,
+                                relief="ridge")
+
+        self.timeIn.grid(row = 2, column = 0)
 
         self.timeOut = tk.Button(self,
                                  text="TIME OUT",
-                                 command=self.punchOUT)
+                                 font=myFont,
+                                 image=self.ClockInImage,
+                                 fg='black',
+                                 bg="#2e3047",
+                                 compound=tk.TOP,
+                                 command=self.punchOUT,
+                                 activebackground="#686664",
+                                 borderwidth=5,
+                                 relief="ridge")
 
-        self.timeOut.pack(side='right')
+        self.timeOut.grid(row = 3, column = 0)
+
 
     def round(self, val):
         if val < 25: return 25
@@ -51,27 +91,22 @@ class Application(tk.Frame):
         self.timeIN = t.strftime("%H:%M:%S")
 
     def punchOUT(self):
+        self.root.bind('<Return>', self.fix())
         if self.timeIN == 0:
-            self.forgot = tk.Label(self,
-                                   text="FORGOT TO CLOCK IN \n ENTER TIME IN")
-            self.forgot.pack()
+            self.header['text'] = "You Forgot\nTo Clock In"
+            self.forgotClockIn.grid(row=1, column=0)
+        else:
+            t = datetime.now()
+            self.timeOut = t.strftime("%H:%M:%S")
+            self.cal(self.timeIN, self.timeOut)
 
-            self.forgotEnter = tk.Entry(self)
-            self.forgotEnter.pack()
-            root.bind('<Return>', self.fix(self.forgotEnter.get()))
-        t = datetime.now()
-        self.timeOut = t.strftime("%H:%M:%S")
-        self.cal(self.timeIN, self.timeOut)
-
-    def fix(self, entry):
-        if str(entry).isnumeric():
-            if len(entry) < 4:
-                entry = '0' + entry
-            self.timeIN = entry[:2] + ':' + entry[2:] + ':00'
+    def fix(self):
+        print("WE ARE HERE")
+        print(self.forgotClockIn.get())
 
     def cal(self, timein, timeout):
-        tempout = int(re.sub('[^0-9]','',timeout))
-        tempin = int(re.sub('[^0-9]','',timein))
+        tempout = int(re.sub('[^0-9]', '', timeout))
+        tempin = int(re.sub('[^0-9]', '', timein))
         tempdif = tempout - tempin
         self.hoursWorked = int(tempdif / 3600)
         self.minsWorked = tempdif / 60 / 60 * 100
@@ -100,5 +135,6 @@ class Application(tk.Frame):
 
 
 root = tk.Tk()
+root.geometry('280x830')
 app = Application(master=root)
 app.mainloop()
