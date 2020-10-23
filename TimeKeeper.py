@@ -4,7 +4,7 @@ import re
 import pandas
 import tkinter.font as font
 from openpyxl import load_workbook
-from tkinter import PhotoImage
+import random
 
 
 class Application(tk.Frame):
@@ -65,7 +65,7 @@ class Application(tk.Frame):
                                 borderwidth=5,
                                 relief="ridge")
 
-        self.timeIn.grid(row = 2, column = 0)
+        self.timeIn.grid(row=2, column=0)
 
         self.timeOut = tk.Button(self,
                                  text="TIME OUT",
@@ -79,13 +79,18 @@ class Application(tk.Frame):
                                  borderwidth=5,
                                  relief="ridge")
 
-        self.timeOut.grid(row = 3, column = 0)
+        self.timeOut.grid(row=3, column=0)
 
-
-    def round(self, val):
-        if val < 25: return 25
-        if val < 50: return 50
-        if val < 75: return 75
+    def rounded(self, val):
+        if val < 25:
+            return 25
+        elif val < 50:
+            return 50
+        elif val < 75:
+            return 75
+        else:
+            self.hoursWorked += 1
+            return 0
 
     def punchIN(self):
         t = datetime.now()
@@ -98,6 +103,7 @@ class Application(tk.Frame):
         t = datetime.now()
         self.timeOut = t.strftime("%H:%M:%S")
         if self.timeIN == 0:
+            root.geometry('280x840')
             root.bind('<Return>', self.fix)
             root.bind('<Button-1>', self.deletePreText)
             self.header['text'] = "You Forgot\nTo Clock In"
@@ -108,33 +114,28 @@ class Application(tk.Frame):
     def fix(self, idk):
         valid = True
         adjust = self.forgotClockIn.get()
-        if len(adjust) == 4:
+
+        if len(adjust) <= 4:
             adjust = '0' + adjust
-        if len(adjust) == 5:
-            print(adjust)
-            for c in adjust:
-                print(c)
-                if not c.isdigit() and c != ':':
-                    valid = False
-                    print(valid)
-                    self.header['text'] = "Not A Valid Time\nUse This Format\n00:00"
-                    self.forgotClockIn.delete(0, 'end')
-        else:
-            self.header['text'] = "Not A Valid Time\nUse This Format\n00:00"
-            self.forgotClockIn.delete(0, 'end')
+
+        for c in adjust:
+            if not c.isdigit() and c != ':':
+                valid = False
+                self.header['text'] = "Not A Valid Time\nUse This Format\n00:00"
+                self.header['fg'] = "#" + str(random.randint(100000, 999999))
+                self.forgotClockIn.delete(0, 'end')
+
         if valid:
-            self.timeIN = adjust
+            self.timeIN = adjust[:2] + ':' + adjust[2:] + ':00'
             self.cal(self.timeIN, self.timeOut)
 
     def cal(self, timein, timeout):
-        print(type(timein))
-        print(type(timeout))
         tempout = int(re.sub('[^0-9]', '', timeout))
         tempin = int(re.sub('[^0-9]', '', timein))
-        tempdif = tempout - tempin
-        self.hoursWorked = int(tempdif / 3600)
-        self.minsWorked = tempdif / 60 / 60 * 100
-        self.minsWorked = round(self.minsWorked)
+        tempdif = str(tempout - tempin)
+        self.hoursWorked = int(tempdif[:1])
+        self.minsWorked = int(tempdif[1:3]) * 100 / 60
+        self.minsWorked = self.rounded(self.minsWorked)
         self.header["text"] = "YOU HAVE WORKED\n" + str(self.hoursWorked) + ':' + str(self.minsWorked)
         self.appendToXlsx(self.timeIN, self.timeOut, self.hoursWorked, self.minsWorked)
 
@@ -150,15 +151,17 @@ class Application(tk.Frame):
         if startrow is None:
             startrow = 0
 
-        df = {"IN": [In], "OUT": [Out], "HOURS:MINS": [str(Hours) + ":" + str(Mins)]}
+        #df = {"IN": [In], "OUT": [Out], "HOURS:MINS": [str(Hours) + ":" + str(Mins)]}
+        hm = str(Hours) + ":" + str(Mins)
+        df = [[In, Out, hm]]
         info = pandas.DataFrame(data=df, columns=['IN', 'OUT', 'HOURS:MINS'], index=[str(datetime.date(datetime.now()))])
 
-        info.to_excel(writer, 'Sheet1', startrow=startrow, **to_excel_kwargs)
+        info.to_excel(writer, 'Sheet1', startrow=startrow, header= False, **to_excel_kwargs)
         writer.save()
         writer.close()
 
 
 root = tk.Tk()
-root.geometry('280x840')
+root.geometry('280x800')
 app = Application(master=root)
 app.mainloop()
