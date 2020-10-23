@@ -27,20 +27,21 @@ class Application(tk.Frame):
 
         self.forgotClockIn = tk.Entry(self,
                                       width=16,
-                                      bg="#2e3047",
+                                      bg="#686664",
                                       fg="white",
                                       font=myFont,
-                                      justify='center')
-
-        self.forgotClockIn.insert('end', "Enter Time\n00:00")
+                                      justify='center',
+                                      borderwidth=5,
+                                      relief="ridge")
 
         self.forgotClockIn.grid(row=1, column=0)
+        self.forgotClockIn.insert('end', "00:00")
         self.forgotClockIn.grid_forget()
 
         self.header = tk.Label(self,
                                font=myFont,
                                text="CLOCK IN\n\nCLOCK OUT",
-                               fg='black',
+                               fg='white',
                                bg="#2e3047",
                                height=5,
                                width=16,
@@ -90,34 +91,44 @@ class Application(tk.Frame):
         t = datetime.now()
         self.timeIN = t.strftime("%H:%M:%S")
 
+    def deletePreText(self, idk):
+        self.forgotClockIn.delete(0, 'end')
+
     def punchOUT(self):
+        t = datetime.now()
+        self.timeOut = t.strftime("%H:%M:%S")
         if self.timeIN == 0:
-            root.bind('<Button-1>', self.removePreText)
             root.bind('<Return>', self.fix)
+            root.bind('<Button-1>', self.deletePreText)
             self.header['text'] = "You Forgot\nTo Clock In"
             self.forgotClockIn.grid(row=1, column=0)
         else:
-            t = datetime.now()
-            self.timeOut = t.strftime("%H:%M:%S")
             self.cal(self.timeIN, self.timeOut)
 
-    def removePreText(self, idk):
-        self.forgotClockIn.delete(0, 'end')
-
     def fix(self, idk):
+        valid = True
         adjust = self.forgotClockIn.get()
         if len(adjust) == 4:
             adjust = '0' + adjust
         if len(adjust) == 5:
+            print(adjust)
             for c in adjust:
-                if not c.isdigit() or c != ':':
-                    self.header['text'] = "Not A Valid Time\nEnter Time Using\nThis Format\n00:00"
-                    self.removePreText
+                print(c)
+                if not c.isdigit() and c != ':':
+                    valid = False
+                    print(valid)
+                    self.header['text'] = "Not A Valid Time\nUse This Format\n00:00"
+                    self.forgotClockIn.delete(0, 'end')
         else:
-            self.header['text'] = "Not A Valid Time\nEnter Time Using\nThis Format\n00:00"
-            self.removePreText
+            self.header['text'] = "Not A Valid Time\nUse This Format\n00:00"
+            self.forgotClockIn.delete(0, 'end')
+        if valid:
+            self.timeIN = adjust
+            self.cal(self.timeIN, self.timeOut)
 
     def cal(self, timein, timeout):
+        print(type(timein))
+        print(type(timeout))
         tempout = int(re.sub('[^0-9]', '', timeout))
         tempin = int(re.sub('[^0-9]', '', timein))
         tempdif = tempout - tempin
@@ -148,6 +159,6 @@ class Application(tk.Frame):
 
 
 root = tk.Tk()
-root.geometry('280x830')
+root.geometry('280x840')
 app = Application(master=root)
 app.mainloop()
